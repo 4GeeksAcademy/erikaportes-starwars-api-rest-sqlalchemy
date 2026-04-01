@@ -37,9 +37,7 @@ def sitemap():
     return generate_sitemap(app)
 
 
-# =========================
 # USER ACTUAL SIMULADO
-# =========================
 CURRENT_USER_ID = 1
 
 
@@ -49,11 +47,8 @@ def get_current_user():
         return None
     return user
 
-# =========================
+
 # PEOPLE
-# =========================
-
-
 @app.route('/people', methods=['GET'])
 def get_people():
     people = db.session.query(Character).all()
@@ -70,9 +65,7 @@ def get_single_person(people_id):
     return jsonify(person.serialize()), 200
 
 
-# =========================
 # PLANETS
-# =========================
 @app.route('/planets', methods=['GET'])
 def get_planets():
     planets = db.session.query(Planet).all()
@@ -89,9 +82,7 @@ def get_single_planet(planet_id):
     return jsonify(planet.serialize()), 200
 
 
-# =========================
 # USERS
-# =========================
 @app.route('/users', methods=['GET'])
 def get_users():
     users = db.session.query(User).all()
@@ -108,9 +99,7 @@ def get_user_favorites():
     return jsonify([fav.serialize() for fav in user.favorite]), 200
 
 
-# =========================
 # ADD FAVORITES
-# =========================
 @app.route('/favorite/planet/<int:planet_id>', methods=['POST'])
 def add_favorite_planet(planet_id):
 
@@ -164,9 +153,7 @@ def add_favorite_person(people_id):
     return jsonify(new_fav.serialize()), 201
 
 
-# =========================
 # DELETE FAVORITES
-# =========================
 @app.route('/favorite/planet/<int:planet_id>', methods=['DELETE'])
 def delete_favorite_planet(planet_id):
 
@@ -205,9 +192,7 @@ def delete_favorite_person(people_id):
     return jsonify({"msg": "Deleted successfully"}), 200
 
 
-# =========================
 # RUN
-# =========================
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=True)
