@@ -152,9 +152,14 @@ def add_favorite_person(people_id):
         new_fav = Favorite(user_id=user.id, character_id=people_id)
         db.session.add(new_fav)
         db.session.commit()
+
     except IntegrityError:
         db.session.rollback()
         return jsonify({"msg": "Already in favorites"}), 400
+
+    except Exception:
+        db.session.rollback()
+        return jsonify({"msg": "Unexpected error"}), 500
 
     return jsonify(new_fav.serialize()), 201
 
