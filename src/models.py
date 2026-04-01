@@ -7,10 +7,11 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
+    __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(
-        String(120), unique=True, nullable=False)
+        String(120), unique=True, nullable=False, index=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(
         Boolean(), default=True, nullable=False)
@@ -19,11 +20,11 @@ class User(db.Model):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow)
 
-    # Relación con favoritos
     favorite = relationship(
         "Favorite",
         back_populates="user",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="select"
     )
 
     def serialize(self):
@@ -31,20 +32,21 @@ class User(db.Model):
             "id": self.id,
             "email": self.email,
             "first_name": self.first_name,
-            "last_name": self.last_name,
-            "favorite": [fav.serialize() for fav in self.favorite]
+            "last_name": self.last_name
         }
 
 
 class Character(db.Model):
+    __tablename__ = "characters"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     gender: Mapped[str] = mapped_column(String(20), nullable=True)
     hair_color: Mapped[str] = mapped_column(String(50), nullable=True)
     eye_color: Mapped[str] = mapped_column(String(50), nullable=True)
 
-    favorite = relationship("Favorite", back_populates="character")
+    favorite = relationship(
+        "Favorite", back_populates="character", lazy="select")
 
     def serialize(self):
         return {
@@ -57,13 +59,14 @@ class Character(db.Model):
 
 
 class Planet(db.Model):
+    __tablename__ = "planets"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     climate: Mapped[str] = mapped_column(String(80), nullable=True)
     population: Mapped[str] = mapped_column(String(50), nullable=True)
 
-    favorite = relationship("Favorite", back_populates="planet")
+    favorite = relationship("Favorite", back_populates="planet", lazy="select")
 
     def serialize(self):
         return {
@@ -74,35 +77,31 @@ class Planet(db.Model):
         }
 
 
-# FAVORITE (tabla intermedia)
 class Favorite(db.Model):
+    __tablename__ = "favorites"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id"), nullable=False)
-
+        ForeignKey("users.id"), nullable=False, index=True)
     character_id: Mapped[int] = mapped_column(
-        ForeignKey("character.id"), nullable=True)
+        ForeignKey("characters.id"), nullable=True)
     planet_id: Mapped[int] = mapped_column(
-        ForeignKey("planet.id"), nullable=True)
+        ForeignKey("planets.id"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-
         CheckConstraint(
             "(character_id IS NOT NULL AND planet_id IS NULL) OR "
             "(character_id IS NULL AND planet_id IS NOT NULL)",
             name="check_one_favorite_type"
         ),
-
         UniqueConstraint('user_id', 'character_id',
                          name='unique_user_character'),
         UniqueConstraint('user_id', 'planet_id', name='unique_user_planet'),
     )
 
-    # Relaciones
     user = relationship("User", back_populates="favorite")
     character = relationship("Character", back_populates="favorite")
     planet = relationship("Planet", back_populates="favorite")
